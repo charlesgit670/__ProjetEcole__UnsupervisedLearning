@@ -9,13 +9,13 @@ if not os.path.exists('plots'):
     os.makedirs('plots')
 
 
-def run_single_experiment(latent_dim, activation='tanh', final_activation='sigmoid', loss='binary_crossentropy'):
+def run_single_experiment(latent_dim, activation='relu', final_activation='sigmoid', loss='binary_crossentropy'):
     # Charger et préparer les données
     x_train, x_test, y_train, y_test = load_mnist_data(normalize=True)
 
     # Créer et entraîner l'AutoEncoder
     autoencoder = AutoEncoder(input_dim=784, latent_dim=latent_dim, activation=activation,
-                              final_activation=final_activation)
+                                final_activation=final_activation)
     history = autoencoder.train(x_train, x_test, epochs=50, batch_size=256, loss=loss)
 
     # Visualiser la perte d'entraînement
@@ -29,7 +29,7 @@ def run_single_experiment(latent_dim, activation='tanh', final_activation='sigmo
     # Visualiser les images originales et reconstruites
     comparison_title = f'Original and Reconstructed Images (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
     utils.plot_comparison(x_test, decoded_imgs, latent_dim, title=comparison_title,
-                          filename=f'plots/encode_decode_dim={latent_dim}_act={activation}.png')
+                            filename=f'plots/encode_decode_dim={latent_dim}_act={activation}.png')
 
     # Si latent_dim == 2 ou 3, visualiser l'espace latent
     if latent_dim in [2, 3]:
@@ -41,7 +41,7 @@ def run_single_experiment(latent_dim, activation='tanh', final_activation='sigmo
     synthetic_data, latent_points = autoencoder.generate_synthetic_data()
     synthetic_title = f'Synthetic Data (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
     utils.plot_synthetic_data(synthetic_data, latent_points, title=synthetic_title,
-                              filename=f'plots/gendata_dim={latent_dim}_act={activation}.png')
+                                filename=f'plots/gendata_dim={latent_dim}_act={activation}.png')
 
 
 def run_exploration(activations, losses, latent_dims):
@@ -60,13 +60,12 @@ def run_exploration(activations, losses, latent_dims):
                     f"Running exploration {current_exploration}/{total_explorations} - Activation: {activation}, Loss: {loss}, Latent Dim: {latent_dim}")
 
                 autoencoder = AutoEncoder(input_dim=784, latent_dim=latent_dim, activation=activation,
-                                          final_activation='sigmoid')
+                                            final_activation='sigmoid')
                 history = autoencoder.train(x_train, x_test, epochs=50, batch_size=256, loss=loss)
                 histories[(activation, loss, latent_dim)] = history
 
     # Visualiser les pertes d'entraînement pour chaque combinaison d'activation et de perte
-    utils.plot_multiple_histories(histories, activations, losses, latent_dims,
-                                  filename=f'plots/exploration.png')
+    utils.plot_multiple_histories(histories, activations, losses, latent_dims, filename='plots/exploration')
 
 
 if __name__ == "__main__":
@@ -76,5 +75,5 @@ if __name__ == "__main__":
     # Exploration automatique de plusieurs configurations
     activations = ['relu', 'tanh']
     losses = ['binary_crossentropy', 'mse']
-    latent_dims = [2, 3, 5]
-    # run_exploration(activations, losses, latent_dims)
+    latent_dims = [3, 30]
+    run_exploration(activations, losses, latent_dims)

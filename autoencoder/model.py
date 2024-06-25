@@ -46,7 +46,6 @@ class AutoEncoder:
         # La couche de sortie reconstruit les données d'entrée avec une activation spécifiée
         decoded = Dense(self.input_dim, activation=self.final_activation)(decoded)
 
-        # Création du modèle AutoEncoder
         autoencoder = Model(input_img, decoded)
 
         return autoencoder
@@ -54,22 +53,14 @@ class AutoEncoder:
     def build_encoder(self):
         """
         Construit l'architecture de l'encodeur seule.
-
         L'encodeur prend l'entrée de l'AutoEncoder et sort la couche encodée (latente)
-
-        Returns:
-        encoder (Model): Le modèle de l'encodeur qui réduit les données d'entrée à l'espace latent.
         """
         return Model(self.autoencoder.input, self.autoencoder.layers[3].output)
 
     def build_decoder(self):
         """
         Construit l'architecture du décodeur seule.
-
         Le décodeur prend la représentation latente et reconstruit les données d'origine.
-
-        Returns:
-        decoder (Model): Le modèle du décodeur qui reconstruit les données à partir de l'espace latent.
         """
         encoded_input = Input(shape=(self.latent_dim,))
         decoder_layer = self.autoencoder.layers[-3](encoded_input)
@@ -79,15 +70,6 @@ class AutoEncoder:
 
     def train(self, x_train, x_test, epochs=50, batch_size=256, loss='binary_crossentropy'):
         """
-        Entraîne l'AutoEncoder avec les données de formation.
-
-        Parameters:
-        x_train (ndarray): Les données d'entraînement.
-        x_test (ndarray): Les données de test pour la validation.
-        epochs (int): Le nombre d'époques pour l'entraînement.
-        batch_size (int): La taille des lots pour l'entraînement.
-        loss (str): La fonction de perte à utiliser pour l'entraînement.
-
         Returns:
         history (History): L'historique de l'entraînement contenant les pertes pour chaque époque.
         """
@@ -100,8 +82,6 @@ class AutoEncoder:
 
     def encode(self, x):
         """
-        Encode les données d'entrée en utilisant l'encodeur.
-
         Parameters:
         x (ndarray): Les données d'entrée à encoder.
 
@@ -112,8 +92,6 @@ class AutoEncoder:
 
     def decode(self, encoded_imgs):
         """
-        Décode les données encodées en utilisant le décodeur.
-
         Parameters:
         encoded_imgs (ndarray): Les données encodées à décoder.
 
@@ -124,7 +102,7 @@ class AutoEncoder:
 
     def generate_synthetic_data(self, step=0.25):
         """
-        Génère des données synthétiques en échantillonnant l'espace latent avec des pas de 0.25.
+        Génère des données en échantillonnant l'espace latent avec des pas de 0.25.
 
         Parameters:
         step (float): Le pas de l'échantillonnage dans l'espace latent.

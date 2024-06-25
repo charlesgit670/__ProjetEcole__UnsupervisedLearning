@@ -70,17 +70,17 @@ def plot_latent_space(encoded_imgs, latent_dim, y_test, title, filename=None):
 
 def plot_synthetic_data(synthetic_data, latent_points, title, filename=None, step=0.25):
     num_images = len(synthetic_data)
-    n_cols = int(np.ceil(np.sqrt(num_images)))
-    n_rows = int(np.ceil(num_images / n_cols))
+    n_cols = 5  # 5 valeurs différentes pour chaque dimension
+    n_rows = num_images // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, n_rows * 2))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(20, n_rows * 3))
     axes = axes.flatten()
 
     for i in range(num_images):
         ax = axes[i]
         ax.imshow(synthetic_data[i].reshape(28, 28), cmap='gray')
         x, y, z = latent_points[i]
-        ax.set_title(f'({x:.2f}, {y:.2f}, {z:.2f})', fontsize=10)
+        ax.set_title(f'({x:.2f}, {y:.2f}, {z:.2f})', fontsize=8)
         ax.axis('off')
 
     for ax in axes[num_images:]:
@@ -92,3 +92,33 @@ def plot_synthetic_data(synthetic_data, latent_points, title, filename=None, ste
     plt.show()
 
 
+def plot_multiple_histories(histories, activations, losses, latent_dims, filename=None):
+    styles = ['-', '--', '-.', ':']
+    markers = ['o', 's', '^', 'D']
+
+    for loss in losses:
+        fig, axs = plt.subplots(len(activations), len(latent_dims), figsize=(15, 10))
+        fig.suptitle(f'Training and Validation Loss for Loss Function: {loss}')
+
+        for i, activation in enumerate(activations):
+            for j, latent_dim in enumerate(latent_dims):
+                style = styles[j % len(styles)]
+                marker = markers[i % len(markers)]
+                history = histories[(activation, loss, latent_dim)]
+                axs[i, j].plot(history.history['loss'], label='Train Loss', linestyle=style, marker=marker)
+                axs[i, j].plot(history.history['val_loss'], label='Val Loss', linestyle=style, marker=marker)
+                axs[i, j].set_title(f'Act: {activation}, Latent Dim: {latent_dim}')
+                axs[i, j].legend()
+
+        for ax in axs.flat:
+            ax.set(xlabel='Epochs', ylabel='Loss')
+
+        for ax in axs.flat:
+            ax.label_outer()
+
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+        if filename:
+            plt.savefig(f'{filename}_{loss}.png', bbox_inches='tight')
+
+        plt.show()
