@@ -95,6 +95,24 @@ class KMeans:
 
         return distribution
 
+    def generate_images_gaussian_noise(self, n_samples_per_cluster=1, std_dev=0.1):
+        # Générer de nouvelles valeurs autour des centroids
+        new_images = np.zeros((n_samples_per_cluster, self.centroids.shape[0], self.centroids.shape[1]))
+        for i in range(n_samples_per_cluster):
+            for j in range(self.centroids.shape[0]):
+                new_images[i, j] = self.centroids[j] + np.random.normal(0, std_dev, self.centroids.shape[1])
+
+        return new_images
+
+    def generate_weighted_images(self, weight_factor=2.0):
+        # Générer de nouvelles valeurs comme une combinaison linéaire pondérée des centroids
+        new_images = np.zeros((self.n_clusters, self.centroids.shape[1]))
+        for i in range(self.n_clusters):
+            weights = np.ones(self.n_clusters) / (self.n_clusters + weight_factor - 1)
+            weights[i] *= weight_factor
+            new_images[i] = np.dot(weights, self.centroids)
+        return new_images
+
 def plot_latent_space(distribution, y):
     n_clusters = distribution.shape[0]
     n_cols = 5
@@ -136,6 +154,21 @@ def plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, re
     plt.tight_layout()  # Pour ajuster l'espacement automatiquement
     plt.show()
 
+def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster):
+    rows = n_clusters
+    cols = n_samples_per_cluster
+
+    plt.figure(figsize=(15, rows * 2))  # Ajuster la taille de la figure en fonction du nombre de lignes
+    for i in range(n_clusters):
+        for j in range(n_samples_per_cluster):
+            index = i * n_samples_per_cluster + j
+            plt.subplot(rows, cols, index + 1)
+            plt.imshow(generated_images[j, i].reshape(28, 28), cmap='gray')
+            plt.title(f'Cluster {i}, Sample {j}')
+            plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     # Charger les données MNIST
@@ -145,17 +178,28 @@ if __name__ == "__main__":
     X_train = X_train.reshape((X_train.shape[0], -1)).astype(np.float32) / 255.0
     X_test = X_test.reshape((X_test.shape[0], -1)).astype(np.float32) / 255.0
 
+    n_clusters = 30
+
     # Initialiser et entraîner le modèle k-means
-    kmeans = KMeans(n_clusters=20)
+    kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(X_train)
 
     # plot reconstructed images
-    # predictions = kmeans.predict(X_test)
-    # reconstructed_images_naive = reconstructed_images_naive = kmeans.reconstruct_image_naive(X_test)
-    # reconstructed_images, clusters = kmeans.reconstruct_image(X_test)
-    # plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters)
+    predictions = kmeans.predict(X_test)
+    reconstructed_images_naive = reconstructed_images_naive = kmeans.reconstruct_image_naive(X_test)
+    reconstructed_images, clusters = kmeans.reconstruct_image(X_test)
+    plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters)
 
     # plot latent space
     distribution = kmeans.label_distribution_per_cluster(X_test, y_test)
     plot_latent_space(distribution, y_test)
+
+    # plot generated image gaussian noise
+    n_samples_per_cluster = 5
+    generated_images = kmeans.generate_images_gaussian_noise(n_samples_per_cluster, 0.1)
+    plot_generated_images(generated_images, n_clusters, n_samples_per_cluster)
+
+    # plot generated image weights clusters
+    generated_images = kmeans.generate_weighted_images(weight_factor=n_clusters)
+    plot_generated_images(generated_images.reshape(1, n_clusters, -1), n_clusters, 1)
 
