@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
@@ -92,33 +94,26 @@ def plot_synthetic_data(synthetic_data, latent_points, title, filename=None, ste
     plt.show()
 
 
-def plot_multiple_histories(histories, activations, losses, latent_dims, filename=None):
+def plot_multiple_histories(histories, activations, losses, latent_dims):
     styles = ['-', '--', '-.', ':']
     markers = ['o', 's', '^', 'D']
 
     for loss in losses:
-        fig, axs = plt.subplots(len(activations), len(latent_dims), figsize=(15, 10))
-        fig.suptitle(f'Training and Validation Loss for Loss Function: {loss}')
-
+        fig, axs = plt.subplots(len(latent_dims), len(activations), figsize=(15, 10))
         for i, activation in enumerate(activations):
             for j, latent_dim in enumerate(latent_dims):
-                style = styles[j % len(styles)]
-                marker = markers[i % len(markers)]
                 history = histories[(activation, loss, latent_dim)]
-                axs[i, j].plot(history.history['loss'], label='Train Loss', linestyle=style, marker=marker)
-                axs[i, j].plot(history.history['val_loss'], label='Val Loss', linestyle=style, marker=marker)
-                axs[i, j].set_title(f'Act: {activation}, Latent Dim: {latent_dim}')
-                axs[i, j].legend()
+                style = styles[j % len(styles)]
+                marker = markers[j % len(markers)]
+                axs[j, i].plot(history.history['loss'], label='Train Loss', linestyle=style, marker=marker)
+                axs[j, i].plot(history.history['val_loss'], label='Val Loss', linestyle=style, marker=marker)
+                axs[j, i].set_title(f'Act: {activation}, Latent Dim: {latent_dim}')
+                axs[j, i].set_xlabel('Epochs')
+                axs[j, i].set_ylabel('Loss')
+                axs[j, i].legend()
 
-        for ax in axs.flat:
-            ax.set(xlabel='Epochs', ylabel='Loss')
-
-        for ax in axs.flat:
-            ax.label_outer()
-
-        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
-
-        if filename:
-            plt.savefig(f'{filename}_{loss}.png', bbox_inches='tight')
+        plt.tight_layout(rect=[0, 0, 1, 0.96])  # Ajuster les marges pour inclure les titres et les labels
+        fig.suptitle(f'Training and Validation Loss for Loss Function: {loss}', fontsize=16)
+        plt.savefig(f'plots/exploration__loss={loss}.png', bbox_inches='tight')
 
         plt.show()

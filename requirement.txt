@@ -2,3 +2,6 @@ tensorflow
 numpy
 matplotlib
 PyQt5
+scikit-learn
+pandas
+jupyter

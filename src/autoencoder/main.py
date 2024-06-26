@@ -2,7 +2,6 @@ import os
 from data_loader import load_mnist_data
 from model import AutoEncoder
 import utils
-import numpy as np
 
 # Créer un dossier pour les graphiques si nécessaire
 if not os.path.exists('plots'):
@@ -20,7 +19,7 @@ def run_single_experiment(latent_dim, activation='relu', final_activation='sigmo
 
     # Visualiser la perte d'entraînement
     loss_title = f'Training Loss (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
-    utils.plot_loss(history, title=loss_title, filename=f'plots/los_dim={latent_dim}_act={activation}.png')
+    utils.plot_loss(history, title=loss_title, filename=f'plots/los_dim={latent_dim}_act={activation}_loss={loss}.png')
 
     # Encoder et reconstruire les images
     encoded_imgs = autoencoder.encode(x_test)
@@ -29,19 +28,19 @@ def run_single_experiment(latent_dim, activation='relu', final_activation='sigmo
     # Visualiser les images originales et reconstruites
     comparison_title = f'Original and Reconstructed Images (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
     utils.plot_comparison(x_test, decoded_imgs, latent_dim, title=comparison_title,
-                            filename=f'plots/encode_decode_dim={latent_dim}_act={activation}.png')
+                          filename=f'plots/encode_decode_dim={latent_dim}_act={activation}_loss={loss}.png')
 
     # Si latent_dim == 2 ou 3, visualiser l'espace latent
     if latent_dim in [2, 3]:
         latent_space_title = f'Latent Space Representation (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
         utils.plot_latent_space(encoded_imgs, latent_dim, y_test, title=latent_space_title,
-                                filename=f'plots/latent_space_dim={latent_dim}_act={activation}.png')
+                                filename=f'plots/latent_space_dim={latent_dim}_act={activation}_loss={loss}.png')
 
     # Générer des données synthétiques
     synthetic_data, latent_points = autoencoder.generate_synthetic_data()
     synthetic_title = f'Synthetic Data (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss})'
     utils.plot_synthetic_data(synthetic_data, latent_points, title=synthetic_title,
-                                filename=f'plots/gendata_dim={latent_dim}_act={activation}.png')
+                              filename=f'plots/gendata_dim={latent_dim}_act={activation}_loss={loss}.png')
 
 
 def run_exploration(activations, losses, latent_dims):
@@ -65,7 +64,7 @@ def run_exploration(activations, losses, latent_dims):
                 histories[(activation, loss, latent_dim)] = history
 
     # Visualiser les pertes d'entraînement pour chaque combinaison d'activation et de perte
-    utils.plot_multiple_histories(histories, activations, losses, latent_dims, filename='plots/exploration')
+    utils.plot_multiple_histories(histories, activations, losses, latent_dims)
 
 
 if __name__ == "__main__":
@@ -76,4 +75,4 @@ if __name__ == "__main__":
     activations = ['relu', 'tanh']
     losses = ['binary_crossentropy', 'mse']
     latent_dims = [3, 30]
-    run_exploration(activations, losses, latent_dims)
+    # run_exploration(activations, losses, latent_dims)
