@@ -1,7 +1,7 @@
 import os
 import tensorflow as tf
 import numpy as np
-from data_loader import load_mnist
+from data_loader import load_mnist, load_food_data
 from model import create_vae
 import utils
 
@@ -9,10 +9,16 @@ import utils
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-def run_single_experiment(latent_dim, epochs=10):
+def run_single_experiment(latent_dim, epochs=10, dataset='mnist'):
     """Run a single experiment with the given parameters."""
     # Charger et préparer les données
-    (x_train, y_train), (x_test, y_test) = load_mnist()
+    if dataset == 'mnist':
+        (x_train, y_train), (x_test, y_test) = load_mnist()
+    elif dataset == 'food':
+        (x_train, y_train), (x_test, y_test), _ = load_food_data(target_size=64)
+    else:
+        raise ValueError("Dataset not supported. Choose 'mnist' or 'food'.")
+
     assert x_train is not None and x_test is not None, "Training and test data cannot be None"
 
     # Vérification des données
@@ -21,7 +27,7 @@ def run_single_experiment(latent_dim, epochs=10):
     print(f"x_train shape: {x_train.shape}, x_test shape: {x_test.shape}")
 
     # Créer et entraîner le VAE
-    vae = create_vae(latent_dim=latent_dim)
+    vae = create_vae(latent_dim=latent_dim, input_shape=x_train.shape[1:])
     history = vae.fit(x_train, epochs=epochs, batch_size=128, validation_data=(x_test, x_test))
 
     # Visualiser la perte d'entraînement
@@ -44,10 +50,16 @@ def run_single_experiment(latent_dim, epochs=10):
     encoded_imgs = vae.encoder.predict(x_test)[0]
     print("Sample of encoded values:\n", encoded_imgs[:5])
 
-def run_exploration(latent_dims):
+def run_exploration(latent_dims, dataset='mnist'):
     """Run an automatic exploration with given parameters."""
     # Charger et préparer les données
-    (x_train, y_train), (x_test, y_test) = load_mnist()
+    if dataset == 'mnist':
+        (x_train, y_train), (x_test, y_test) = load_mnist()
+    elif dataset == 'food':
+        (x_train, y_train), (x_test, y_test), _ = load_food_data(target_size=64)
+    else:
+        raise ValueError("Dataset not supported. Choose 'mnist' or 'food'.")
+
     assert x_train is not None and x_test is not None, "Training and test data cannot be None"
 
     # Vérification des données
@@ -63,7 +75,7 @@ def run_exploration(latent_dims):
         current_exploration += 1
         print(f"Running exploration {current_exploration}/{total_explorations} - Latent Dim: {latent_dim}")
 
-        vae = create_vae(latent_dim=latent_dim)
+        vae = create_vae(latent_dim=latent_dim, input_shape=x_train.shape[1:])
         history = vae.fit(x_train, epochs=10, batch_size=128, validation_data=(x_test, x_test))
         histories[latent_dim] = history
 
@@ -72,8 +84,8 @@ def run_exploration(latent_dims):
 
 if __name__ == "__main__":
     # Exécution d'une seule expérience
-    run_single_experiment(latent_dim=2, epochs=10)
+    run_single_experiment(latent_dim=30, epochs=10, dataset='food')
 
     # Exploration automatique de plusieurs configurations
     latent_dims = [2, 10]
-    # run_exploration(latent_dims)
+    # run_exploration(latent_dims, dataset='food')

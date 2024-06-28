@@ -17,9 +17,9 @@ class Sampling(layers.Layer):
         epsilon = keras.random.normal(shape=(batch, dim), seed=self.seed_generator)
         return z_mean + tf.exp(0.5 * z_log_var) * epsilon
 
-def build_encoder(latent_dim):
+def build_encoder(latent_dim, input_shape):
     """Build the encoder model."""
-    encoder_inputs = keras.Input(shape=(28, 28, 1))
+    encoder_inputs = keras.Input(shape=input_shape)
     x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
     x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
     x = layers.Flatten()(x)
@@ -29,15 +29,16 @@ def build_encoder(latent_dim):
     z = Sampling()([z_mean, z_log_var])
     return keras.Model(encoder_inputs, [z_mean, z_log_var, z], name="encoder")
 
-def build_decoder(latent_dim):
+def build_decoder(latent_dim, input_shape):
     """Build the decoder model."""
     latent_inputs = keras.Input(shape=(latent_dim,))
-    x = layers.Dense(7 * 7 * 64, activation="relu")(latent_inputs)
-    x = layers.Reshape((7, 7, 64))(x)
+    x = layers.Dense((input_shape[0] // 4) * (input_shape[1] // 4) * 64, activation="relu")(latent_inputs)
+    x = layers.Reshape((input_shape[0] // 4, input_shape[1] // 4, 64))(x)
     x = layers.Conv2DTranspose(64, 3, activation="relu", strides=2, padding="same")(x)
     x = layers.Conv2DTranspose(32, 3, activation="relu", strides=2, padding="same")(x)
-    decoder_outputs = layers.Conv2DTranspose(1, 3, activation="sigmoid", padding="same")(x)
+    decoder_outputs = layers.Conv2DTranspose(input_shape[2], 3, activation="sigmoid", padding="same")(x)
     return keras.Model(latent_inputs, decoder_outputs, name="decoder")
+
 
 class VAE(keras.Model):
     """Variational Autoencoder (VAE) model composed of an encoder and a decoder."""
@@ -110,13 +111,23 @@ class VAE(keras.Model):
             step=1
             ranges = np.arange(-5, 4 + step, step)
             latent_points = np.array([[x, y, z] for x in ranges for y in ranges for z in ranges])
+        else:
+            latent_points = np.random.normal(size=(100, latent_dim))
 
         generated_images = self.decoder(latent_points)
         return generated_images, latent_points
 
-def create_vae(latent_dim):
-    encoder = build_encoder(latent_dim)
-    decoder = build_decoder(latent_dim)
+def create_vae(latent_dim, input_shape):
+    encoder = build_encoder(latent_dim, input_shape)
+    decoder = build_decoder(latent_dim, input_shape)
+    vae = VAE(encoder, decoder)
+    vae.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.MeanSquaredError())
+    return vae
+
+
+def create_vae(latent_dim, input_shape):
+    encoder = build_encoder(latent_dim, input_shape)
+    decoder = build_decoder(latent_dim, input_shape)
     vae = VAE(encoder, decoder)
     vae.compile(optimizer=keras.optimizers.Adam(), loss=keras.losses.MeanSquaredError())
     return vae

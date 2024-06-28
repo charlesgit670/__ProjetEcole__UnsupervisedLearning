@@ -40,11 +40,14 @@ class AutoEncoder:
         encoded = BatchNormalization(name="encoder_bn_2")(encoded)
         encoded = Dense(64, activation=self.activation, name="encoder_dense_3")(encoded)
         encoded = BatchNormalization(name="encoder_bn_3")(encoded)
-        # La troisième couche encodée réduit à la dimension latente avec une activation spécifiée
-        encoded = Dense(self.latent_dim, activation=self.activation, name="latent")(encoded)
+        # La couche encodée réduit à la dimension latente
+        encoded = Dense(self.latent_dim, activation="sigmoid", name="latent")(encoded)
+
+        # Add a layer to expand back to the decoder input size
+        expanded = Dense(64, activation=self.activation, name="expand")(encoded)
 
         # Decoder : Reconstruction de l'image
-        decoded = Dense(64, activation=self.activation, name="decoder_dense_1")(encoded)
+        decoded = Dense(64, activation=self.activation, name="decoder_dense_1")(expanded)
         decoded = BatchNormalization(name="decoder_bn_1")(decoded)
         decoded = Dense(128, activation=self.activation, name="decoder_dense_2")(decoded)
         decoded = BatchNormalization(name="decoder_bn_2")(decoded)
@@ -71,7 +74,7 @@ class AutoEncoder:
         """
         encoded_input = Input(shape=(self.latent_dim,))
         x = encoded_input
-        for layer_name in ["decoder_dense_1", "decoder_bn_1", "decoder_dense_2", "decoder_bn_2", "decoder_dense_3", "decoder_bn_3", "output"]:
+        for layer_name in ["expand", "decoder_dense_1", "decoder_bn_1", "decoder_dense_2", "decoder_bn_2", "decoder_dense_3", "decoder_bn_3", "output"]:
             x = self.autoencoder.get_layer(layer_name)(x)
 
         return Model(encoded_input, x)

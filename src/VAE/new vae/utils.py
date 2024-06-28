@@ -72,23 +72,22 @@ def plot_latent_space(vae, x_test, y_test, latent_dim, n=30, figsize=15, filenam
 
 def plot_reconstructions(model, x_test, title="Reconstructions", filename=None):
     decoded_imgs = model.predict(x_test)
-    n = 10
+    n = 10  # nombre d'images à afficher
     plt.figure(figsize=(20, 4))
     for i in range(n):
-        # display original
+        # afficher l'image originale
         ax = plt.subplot(2, n, i + 1)
-        plt.imshow(x_test[i].reshape(28, 28), cmap="gray")
+        plt.imshow(x_test[i].reshape(64, 64, 3))
         ax.axis("off")
 
-        # display reconstruction
+        # afficher la reconstruction
         ax = plt.subplot(2, n, i + 1 + n)
-        plt.imshow(decoded_imgs[i].reshape(28, 28), cmap="gray")
+        plt.imshow(decoded_imgs[i].reshape(64, 64, 3))
         ax.axis("off")
     plt.suptitle(title)
     if filename:
         plt.savefig(filename, bbox_inches='tight')
     plt.show()
-
 
 def plot_synthetic_data(synthetic_data, latent_points, latent_dim, title, filename=None):
     """
