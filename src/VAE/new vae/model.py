@@ -83,7 +83,7 @@ class VAE(keras.Model):
             )
             kl_loss = -0.5 * (1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var))
             kl_loss = tf.reduce_mean(tf.reduce_sum(kl_loss, axis=1))
-            total_loss = reconstruction_loss + kl_loss
+            total_loss = reconstruction_loss + 0.1 * kl_loss
 
             tf.debugging.assert_all_finite(total_loss, "total_loss contains NaN values")
         grads = tape.gradient(total_loss, self.trainable_weights)
@@ -100,13 +100,21 @@ class VAE(keras.Model):
             "kl_loss": self.kl_loss_tracker.result(),
         }
 
-    def generate_synthetic_data(self, latent_dim=3, n_samples=100):
+    def generate_synthetic_data(self, latent_dim, step=1):
         """Generate synthetic data by sampling from the latent space."""
-        random_latent_vectors = tf.random.normal(shape=(n_samples, latent_dim))
-        generated_images = self.decoder(random_latent_vectors)
-        return generated_images, random_latent_vectors
 
-def create_vae(latent_dim=3):
+        if latent_dim == 2:
+            ranges = np.arange(-7, 4 + step, step)
+            latent_points = np.array([[x, y] for x in ranges for y in ranges])
+        elif latent_dim == 3:
+            step=1
+            ranges = np.arange(-5, 4 + step, step)
+            latent_points = np.array([[x, y, z] for x in ranges for y in ranges for z in ranges])
+
+        generated_images = self.decoder(latent_points)
+        return generated_images, latent_points
+
+def create_vae(latent_dim):
     encoder = build_encoder(latent_dim)
     decoder = build_decoder(latent_dim)
     vae = VAE(encoder, decoder)

@@ -9,7 +9,7 @@ import utils
 if not os.path.exists('plots'):
     os.makedirs('plots')
 
-def run_single_experiment(latent_dim=2, epochs=10):
+def run_single_experiment(latent_dim, epochs=10):
     """Run a single experiment with the given parameters."""
     # Charger et préparer les données
     (x_train, y_train), (x_test, y_test) = load_mnist()
@@ -37,7 +37,7 @@ def run_single_experiment(latent_dim=2, epochs=10):
     # Générer des données synthétiques
     synthetic_data, latent_points = vae.generate_synthetic_data(latent_dim=latent_dim)
     synthetic_title = f'Synthetic Data (latent_dim={latent_dim})'
-    utils.plot_synthetic_data(synthetic_data, latent_points, title=synthetic_title,
+    utils.plot_synthetic_data(synthetic_data, latent_points, latent_dim, title=synthetic_title,
                               filename=f'plots/gendata_dim={latent_dim}.png')
 
     # Print sample of encoded values for debugging
@@ -72,7 +72,7 @@ def run_exploration(latent_dims):
 
 if __name__ == "__main__":
     # Exécution d'une seule expérience
-    run_single_experiment(latent_dim=3, epochs=5)
+    run_single_experiment(latent_dim=2, epochs=10)
 
     # Exploration automatique de plusieurs configurations
     latent_dims = [2, 10]
