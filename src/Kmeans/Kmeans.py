@@ -114,6 +114,7 @@ class KMeans:
             new_images[i] = np.dot(weights, self.centroids)
         return new_images
 
+
 def plot_latent_space(distribution, y):
     n_clusters = distribution.shape[0]
     n_cols = 5
@@ -170,25 +171,66 @@ def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster, s
     plt.tight_layout()
     plt.show()
 
+def plot_cluster_images(centroids, shapex, shapey, shapez):
+    n_clusters = centroids.shape[0]
+    grid_size = int(np.ceil(np.sqrt(n_clusters)))
+
+    fig, axes = plt.subplots(grid_size, grid_size, figsize=(10, 10))
+
+    for i, ax in enumerate(axes.flat):
+        if i < n_clusters:
+            ax.imshow(centroids[i].reshape(shapex, shapey, shapez), cmap='gray')  # Afficher l'image
+            ax.axis('off')  # Masquer les axes
+        else:
+            ax.axis('off')  # Masquer les axes pour les sous-graphiques vides
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_generation_images_weights(centroids, gamma, shapex, shapey, shapez):
+    n_clusters = centroids.shape[0]
+    new_images = np.zeros((n_clusters, shapex*shapey*shapez))
+
+    for i, c in enumerate(centroids):
+        distances = np.linalg.norm(centroids - c, axis=-1)
+        # Calculer les pondérations avec une fonction gaussienne
+        weights = np.exp(-distances ** 2 / gamma)
+        # Normaliser les pondérations
+        weights /= np.sum(weights)
+        image = np.dot(weights, centroids)
+        new_images[i] = image
+
+    grid_size = int(np.ceil(np.sqrt(n_clusters)))
+    fig, axes = plt.subplots(grid_size, grid_size, figsize=(10, 10))
+    for i, ax in enumerate(axes.flat):
+        if i < n_clusters:
+            ax.imshow(new_images[i].reshape(shapex, shapey, shapez), cmap='gray')  # Afficher l'image
+            ax.axis('off')  # Masquer les axes
+        else:
+            ax.axis('off')  # Masquer les axes pour les sous-graphiques vides
+
+    plt.tight_layout()
+    plt.show()
+
 
 if __name__ == "__main__":
     # Charger les données MNIST
-    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-    shapex = 28
-    shapey = 28
-    shapez = 1
+    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    # shapex = 28
+    # shapey = 28
+    # shapez = 1
 
     # Charger les données food-101
-    # X_train, X_test, y_train, y_test, label_to_classname = load_data_food()
-    # shapex = 32
-    # shapey = 32
-    # shapez = 3
+    X_train, X_test, y_train, y_test, label_to_classname = load_data_food()
+    shapex = 32
+    shapey = 32
+    shapez = 3
 
     # Prétraiter les données: mise à plat et normalisation
     X_train = X_train.reshape((X_train.shape[0], -1)).astype(np.float32) / 255.0
     X_test = X_test.reshape((X_test.shape[0], -1)).astype(np.float32) / 255.0
 
-    n_clusters = 30
+    n_clusters = 100
 
     # Initialiser et entraîner le modèle k-means
     kmeans = KMeans(n_clusters=n_clusters)
@@ -201,15 +243,23 @@ if __name__ == "__main__":
     plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters, shapex, shapey, shapez)
 
     # plot latent space
-    distribution = kmeans.label_distribution_per_cluster(X_test, y_test)
-    plot_latent_space(distribution, y_test)
+    # distribution = kmeans.label_distribution_per_cluster(X_test, y_test)
+    # plot_latent_space(distribution, y_test)
 
-    # plot generated image gaussian noise
-    n_samples_per_cluster = 5
-    generated_images = kmeans.generate_images_gaussian_noise(n_samples_per_cluster, 0.1)
-    plot_generated_images(generated_images, n_clusters, n_samples_per_cluster, shapex, shapey, shapez)
+    # plot cluster
+    centroids = kmeans.centroids
+    plot_cluster_images(centroids, shapex, shapey, shapez)
 
-    # plot generated image weights clusters
-    generated_images = kmeans.generate_weighted_images(weight_factor=n_clusters)
-    plot_generated_images(generated_images.reshape(1, n_clusters, -1), n_clusters, 1, shapex, shapey, shapez)
+    # plot generated image gaussian noise | pas très utile
+    # n_samples_per_cluster = 5
+    # generated_images = kmeans.generate_images_gaussian_noise(n_samples_per_cluster, 0.1)
+    # plot_generated_images(generated_images, n_clusters, n_samples_per_cluster, shapex, shapey, shapez)
 
+    # plot generated image weights clusters | on prend pas en compte la distance, pas ouf
+    # generated_images = kmeans.generate_weighted_images(weight_factor=n_clusters)
+    # plot_generated_images(generated_images.reshape(1, n_clusters, -1), n_clusters, 1, shapex, shapey, shapez)
+
+    # plot generated image from centroides with gaussian ponderation
+    centroids = kmeans.centroids
+    gamma = 10
+    plot_generation_images_weights(centroids, gamma, shapex, shapey, shapez)

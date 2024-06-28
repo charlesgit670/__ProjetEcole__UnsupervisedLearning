@@ -121,6 +121,39 @@ class SOM:
         plt.tight_layout()
         plt.show()
 
+    def _calculate_weighted_coordinates(self, image, gamma):
+        # Calculer les distances aux poids des neurones
+        distances = np.linalg.norm(self.weights - image, axis=-1)
+
+        # Calculer les pondérations avec une fonction gaussienne
+        weights = np.exp(-distances ** 2 / gamma)
+
+        # Normaliser les pondérations
+        weights /= np.sum(weights)
+
+        # Calculer les coordonnées pondérées
+        weighted_coords = np.sum(weights.flatten()[:, np.newaxis] * self.locations, axis=0)
+
+        return weighted_coords
+
+    def plot_image_coordinates(self, data, labels, gamma=1.0):
+        unique_labels = np.unique(labels)
+        mapped_coordinates = np.zeros((data.shape[0], 2))
+        for i in range(data.shape[0]):
+            mapped_coordinates[i] = self._calculate_weighted_coordinates(data[i], gamma)
+
+        plt.figure(figsize=(10, 8))
+        for i in range(data.shape[0]):
+            plt.scatter(mapped_coordinates[i, 1], mapped_coordinates[i, 0], color=plt.cm.rainbow(labels[i] / len(unique_labels)), alpha=0.6)
+
+        plt.title('Image Coordinates on SOM Map')
+        plt.xlabel('Neuron Y-coordinate')
+        plt.ylabel('Neuron X-coordinate')
+        plt.colorbar(label='Label')
+        plt.xlim(0, self.n)
+        plt.ylim(0, self.m)
+        plt.grid(True)
+        plt.show()
     def _interpolate(self, x, y):
         # Calculer les coordonnées des quatre neurones les plus proches
         x1, y1 = int(np.floor(x)), int(np.floor(y))
@@ -209,19 +242,20 @@ if __name__ == "__main__":
     X_test = X_test.reshape((X_test.shape[0], -1)).astype(np.float32) / 255.0
 
     # Initialiser et entraîner la SOM
-    som = SOM(10, 10, learning_rate=0.1, gamma=1.5, shapex=shapex, shapey=shapey, shapez=shapez, n_iterations=10000)
+    som = SOM(10, 10, learning_rate=0.1, gamma=0.1, shapex=shapex, shapey=shapey, shapez=shapez, n_iterations=10000)
     som.train(X_train)
 
     # Affiche la représentation de la map (espace latent)
     som.plot_weights()
 
     # Affiche l'espace latent sous forme d'histogramme de label par cluster
-    som.plot_label_histograms_per_cluster(X_test, y_test)
+    # som.plot_label_histograms_per_cluster(X_test, y_test)
 
     # Compression/décompression
-    som.plot_reconstructed_images(X_test, y_test, 20)
+    # som.plot_reconstructed_images(X_test, y_test, 20)
 
     # Génération à partir de l'interpolation entre 3 clusters
-    som.plot_interactive_generation()
+    # som.plot_interactive_generation()
 
-    # Affiche la projection des données de test dans l'espace des neurones (demander comment faire demain)
+    # Affiche la projection des données de test dans l'espace des neurones (combinaison linéaire des représentants)
+    # som.plot_image_coordinates(X_test[:2000], y_test[:2000], 2)
