@@ -1,8 +1,7 @@
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.layers import Input, Dense, BatchNormalization
 from tensorflow.keras.models import Model
-
 
 class AutoEncoder:
     def __init__(self, input_dim, latent_dim, activation='relu', final_activation='sigmoid'):
@@ -35,16 +34,24 @@ class AutoEncoder:
         input_img = Input(shape=(self.input_dim,))
 
         # Encoder : Réduction de la dimension
-        encoded = Dense(128, activation=self.activation)(input_img)
-        encoded = Dense(64, activation=self.activation)(encoded)
+        encoded = Dense(256, activation=self.activation, name="encoder_dense_1")(input_img)
+        encoded = BatchNormalization(name="encoder_bn_1")(encoded)
+        encoded = Dense(128, activation=self.activation, name="encoder_dense_2")(encoded)
+        encoded = BatchNormalization(name="encoder_bn_2")(encoded)
+        encoded = Dense(64, activation=self.activation, name="encoder_dense_3")(encoded)
+        encoded = BatchNormalization(name="encoder_bn_3")(encoded)
         # La troisième couche encodée réduit à la dimension latente avec une activation spécifiée
-        encoded = Dense(self.latent_dim, activation="sigmoid")(encoded)
+        encoded = Dense(self.latent_dim, activation=self.activation, name="latent")(encoded)
 
         # Decoder : Reconstruction de l'image
-        decoded = Dense(64, activation=self.activation)(encoded)
-        decoded = Dense(128, activation=self.activation)(decoded)
+        decoded = Dense(64, activation=self.activation, name="decoder_dense_1")(encoded)
+        decoded = BatchNormalization(name="decoder_bn_1")(decoded)
+        decoded = Dense(128, activation=self.activation, name="decoder_dense_2")(decoded)
+        decoded = BatchNormalization(name="decoder_bn_2")(decoded)
+        decoded = Dense(256, activation=self.activation, name="decoder_dense_3")(decoded)
+        decoded = BatchNormalization(name="decoder_bn_3")(decoded)
         # La couche de sortie reconstruit les données d'entrée avec une activation spécifiée
-        decoded = Dense(self.input_dim, activation=self.final_activation)(decoded)
+        decoded = Dense(self.input_dim, activation=self.final_activation, name="output")(decoded)
 
         autoencoder = Model(input_img, decoded)
 
@@ -55,7 +62,7 @@ class AutoEncoder:
         Construit l'architecture de l'encodeur seule.
         L'encodeur prend l'entrée de l'AutoEncoder et sort la couche encodée (latente)
         """
-        return Model(self.autoencoder.input, self.autoencoder.layers[3].output)
+        return Model(self.autoencoder.input, self.autoencoder.get_layer("latent").output)
 
     def build_decoder(self):
         """
@@ -63,17 +70,29 @@ class AutoEncoder:
         Le décodeur prend la représentation latente et reconstruit les données d'origine.
         """
         encoded_input = Input(shape=(self.latent_dim,))
-        decoder_layer = self.autoencoder.layers[-3](encoded_input)
-        decoder_layer = self.autoencoder.layers[-2](decoder_layer)
-        decoder_layer = self.autoencoder.layers[-1](decoder_layer)
-        return Model(encoded_input, decoder_layer)
+        x = encoded_input
+        for layer_name in ["decoder_dense_1", "decoder_bn_1", "decoder_dense_2", "decoder_bn_2", "decoder_dense_3", "decoder_bn_3", "output"]:
+            x = self.autoencoder.get_layer(layer_name)(x)
 
-    def train(self, x_train, x_test, epochs=50, batch_size=256, loss='binary_crossentropy'):
+        return Model(encoded_input, x)
+
+    def train(self, x_train, x_test, epochs=300, batch_size=256, loss='binary_crossentropy', learning_rate=0.001):
         """
+        Entraîne l'AutoEncoder avec les données de formation.
+
+        Parameters:
+        x_train (ndarray): Les données de formation.
+        x_test (ndarray): Les données de test.
+        epochs (int): Le nombre d'époques pour l'entraînement.
+        batch_size (int): La taille du batch pour l'entraînement.
+        loss (str): La fonction de perte à utiliser.
+        learning_rate (float): Le taux d'apprentissage pour l'optimiseur.
+
         Returns:
         history (History): L'historique de l'entraînement contenant les pertes pour chaque époque.
         """
-        self.autoencoder.compile(optimizer='adam', loss=loss)
+        optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        self.autoencoder.compile(optimizer=optimizer, loss=loss)
         return self.autoencoder.fit(x_train, x_train,
                                     epochs=epochs,
                                     batch_size=batch_size,
@@ -82,6 +101,8 @@ class AutoEncoder:
 
     def encode(self, x):
         """
+        Encode les données d'entrée en utilisant l'encodeur.
+
         Parameters:
         x (ndarray): Les données d'entrée à encoder.
 
@@ -92,6 +113,8 @@ class AutoEncoder:
 
     def decode(self, encoded_imgs):
         """
+        Décode les données encodées en utilisant le décodeur.
+
         Parameters:
         encoded_imgs (ndarray): Les données encodées à décoder.
 

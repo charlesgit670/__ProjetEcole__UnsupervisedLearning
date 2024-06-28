@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 
 def load_data_food():
     # Chemin vers le répertoire contenant les dossiers d'images par classe
+    dossier_images = '../../data/food-101-resize-selected/'
     dossier_images = '../../data/food-101-resize_64/'
     size = 64
 
