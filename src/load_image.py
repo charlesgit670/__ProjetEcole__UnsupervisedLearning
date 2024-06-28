@@ -6,7 +6,8 @@ from sklearn.model_selection import train_test_split
 
 def load_data_food():
     # Chemin vers le répertoire contenant les dossiers d'images par classe
-    dossier_images = '../../data/food-101-resize-selected/'
+    dossier_images = '../../data/food-101-resize_64/'
+    size = 64
 
     # Listes pour stocker les images et les labels
     images = []
@@ -27,7 +28,7 @@ def load_data_food():
                         # Charger l'image avec PIL
                         with Image.open(file_path) as img:
                             # Redimensionner l'image si nécessaire
-                            img = img.resize((32, 32))
+                            img = img.resize((size, size))
 
                             # Convertir l'image en tableau numpy
                             img_array = np.array(img)

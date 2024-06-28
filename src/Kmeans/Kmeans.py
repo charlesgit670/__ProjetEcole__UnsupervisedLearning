@@ -3,6 +3,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from annotation import timer
+from load_image import load_data_food
 
 
 class KMeans:
@@ -100,7 +101,7 @@ class KMeans:
         new_images = np.zeros((n_samples_per_cluster, self.centroids.shape[0], self.centroids.shape[1]))
         for i in range(n_samples_per_cluster):
             for j in range(self.centroids.shape[0]):
-                new_images[i, j] = self.centroids[j] + np.random.normal(0, std_dev, self.centroids.shape[1])
+                new_images[i, j] = np.clip(self.centroids[j] + np.random.normal(0, std_dev, self.centroids.shape[1]), 0, 1)
 
         return new_images
 
@@ -129,32 +130,32 @@ def plot_latent_space(distribution, y):
     plt.tight_layout()
     plt.show()
 
-def plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters):
+def plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters, shapex, shapey, shapez):
         # Affichage des résultats pour quelques images de test
     plt.figure(figsize=(20, 10))  # Augmenter la taille de la figure pour plus de lisibilité
     for i in range(10):  # Limiter à 10 images pour éviter la surcharge
         # Affichage des images originales
         plt.subplot(3, 10, i + 1)
-        plt.imshow(X_test[i].reshape(28, 28), cmap='gray')
+        plt.imshow(X_test[i].reshape(shapex, shapey, shapez), cmap='gray')
         plt.title(f'O:{i}', fontsize=15)
         plt.axis('off')
 
         # Affichage des premières images reconstruites
         plt.subplot(3, 10, i + 11)
-        plt.imshow(reconstructed_images_naive[i].reshape(28, 28), cmap='gray')
+        plt.imshow(reconstructed_images_naive[i].reshape(shapex, shapey, shapez), cmap='gray')
         plt.title(f'R1, C:{predictions[i]}', fontsize=15)
         plt.axis('off')
 
         # Affichage des deuxièmes images reconstruites
         plt.subplot(3, 10, i + 21)
-        plt.imshow(reconstructed_images[i].reshape(28, 28), cmap='gray')
+        plt.imshow(reconstructed_images[i].reshape(shapex, shapey, shapez), cmap='gray')
         plt.title(f'R2, C:{clusters[i]}', fontsize=15)
         plt.axis('off')
 
     plt.tight_layout()  # Pour ajuster l'espacement automatiquement
     plt.show()
 
-def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster):
+def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster, shapex, shapey, shapez):
     rows = n_clusters
     cols = n_samples_per_cluster
 
@@ -163,7 +164,7 @@ def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster):
         for j in range(n_samples_per_cluster):
             index = i * n_samples_per_cluster + j
             plt.subplot(rows, cols, index + 1)
-            plt.imshow(generated_images[j, i].reshape(28, 28), cmap='gray')
+            plt.imshow(generated_images[j, i].reshape(shapex, shapey, shapez), cmap='gray')
             plt.title(f'Cluster {i}, Sample {j}')
             plt.axis('off')
     plt.tight_layout()
@@ -173,6 +174,15 @@ def plot_generated_images(generated_images, n_clusters, n_samples_per_cluster):
 if __name__ == "__main__":
     # Charger les données MNIST
     (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    shapex = 28
+    shapey = 28
+    shapez = 1
+
+    # Charger les données food-101
+    # X_train, X_test, y_train, y_test, label_to_classname = load_data_food()
+    # shapex = 32
+    # shapey = 32
+    # shapez = 3
 
     # Prétraiter les données: mise à plat et normalisation
     X_train = X_train.reshape((X_train.shape[0], -1)).astype(np.float32) / 255.0
@@ -188,7 +198,7 @@ if __name__ == "__main__":
     predictions = kmeans.predict(X_test)
     reconstructed_images_naive = reconstructed_images_naive = kmeans.reconstruct_image_naive(X_test)
     reconstructed_images, clusters = kmeans.reconstruct_image(X_test)
-    plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters)
+    plot_reconstructed_image(X_test, predictions, reconstructed_images_naive, reconstructed_images, clusters, shapex, shapey, shapez)
 
     # plot latent space
     distribution = kmeans.label_distribution_per_cluster(X_test, y_test)
@@ -197,9 +207,9 @@ if __name__ == "__main__":
     # plot generated image gaussian noise
     n_samples_per_cluster = 5
     generated_images = kmeans.generate_images_gaussian_noise(n_samples_per_cluster, 0.1)
-    plot_generated_images(generated_images, n_clusters, n_samples_per_cluster)
+    plot_generated_images(generated_images, n_clusters, n_samples_per_cluster, shapex, shapey, shapez)
 
     # plot generated image weights clusters
     generated_images = kmeans.generate_weighted_images(weight_factor=n_clusters)
-    plot_generated_images(generated_images.reshape(1, n_clusters, -1), n_clusters, 1)
+    plot_generated_images(generated_images.reshape(1, n_clusters, -1), n_clusters, 1, shapex, shapey, shapez)
 
