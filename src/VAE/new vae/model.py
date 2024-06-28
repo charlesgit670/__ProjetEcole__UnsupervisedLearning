@@ -100,13 +100,13 @@ class VAE(keras.Model):
             "kl_loss": self.kl_loss_tracker.result(),
         }
 
-    def generate_synthetic_data(self, latent_dim=2, n_samples=100):
+    def generate_synthetic_data(self, latent_dim=3, n_samples=100):
         """Generate synthetic data by sampling from the latent space."""
         random_latent_vectors = tf.random.normal(shape=(n_samples, latent_dim))
         generated_images = self.decoder(random_latent_vectors)
         return generated_images, random_latent_vectors
 
-def create_vae(latent_dim=2):
+def create_vae(latent_dim=3):
     encoder = build_encoder(latent_dim)
     decoder = build_decoder(latent_dim)
     vae = VAE(encoder, decoder)

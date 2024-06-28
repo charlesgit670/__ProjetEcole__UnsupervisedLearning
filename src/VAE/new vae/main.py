@@ -29,7 +29,7 @@ def run_single_experiment(latent_dim=2, epochs=10):
     utils.plot_loss(history, title=loss_title, filename=f'plots/loss_dim={latent_dim}.png')
 
     # Visualiser l'espace latent
-    utils.plot_latent_space(vae, filename=f'plots/latent_space_dim={latent_dim}.png')
+    utils.plot_latent_space(vae, x_test, y_test, latent_dim, filename=f'plots/latent_space_dim={latent_dim}.png')
 
     # Visualiser les images originales et reconstruites
     utils.plot_reconstructions(vae, x_test, filename=f'plots/reconstructions_dim={latent_dim}.png')
@@ -72,8 +72,8 @@ def run_exploration(latent_dims):
 
 if __name__ == "__main__":
     # Exécution d'une seule expérience
-    run_single_experiment(latent_dim=2, epochs=10)
+    run_single_experiment(latent_dim=3, epochs=5)
 
     # Exploration automatique de plusieurs configurations
     latent_dims = [2, 10]
-    run_exploration(latent_dims)
+    # run_exploration(latent_dims)

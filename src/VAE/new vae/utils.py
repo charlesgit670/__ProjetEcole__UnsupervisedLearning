@@ -2,6 +2,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from mpl_toolkits.mplot3d import Axes3D
+
 
 def get_loss_function(loss_name):
     """Get the loss function by name."""
@@ -11,6 +13,7 @@ def get_loss_function(loss_name):
         return tf.keras.losses.MeanSquaredError()
     else:
         raise ValueError(f"Unsupported loss function: {loss_name}")
+
 
 def plot_loss(history, title="Training Loss", filename=None):
     plt.figure()
@@ -25,37 +28,67 @@ def plot_loss(history, title="Training Loss", filename=None):
         plt.savefig(filename)
     plt.show()
 
-def plot_latent_space(vae, n=30, figsize=15, filename=None):
-    digit_size = 28
-    scale = 1.0
-    figure = np.zeros((digit_size * n, digit_size * n))
-    grid_x = np.linspace(-scale, scale, n)
-    grid_y = np.linspace(-scale, scale, n)[::-1]
 
-    for i, yi in enumerate(grid_y):
-        for j, xi in enumerate(grid_x):
-            z_sample = np.array([[xi, yi]])
-            x_decoded = vae.decoder.predict(z_sample, verbose=0)
-            digit = x_decoded[0].reshape(digit_size, digit_size)
-            figure[
-                i * digit_size : (i + 1) * digit_size,
-                j * digit_size : (j + 1) * digit_size,
-            ] = digit
+def plot_latent_space(vae, x_test, y_test, latent_dim, n=30, figsize=15, filename=None):
+    """
+    Plots the latent space for 2D or 3D latent dimensions.
 
-    plt.figure(figsize=(figsize, figsize))
-    start_range = digit_size // 2
-    end_range = n * digit_size + start_range
-    pixel_range = np.arange(start_range, end_range, digit_size)
-    sample_range_x = np.round(grid_x, 1)
-    sample_range_y = np.round(grid_y, 1)
-    plt.xticks(pixel_range, sample_range_x)
-    plt.yticks(pixel_range, sample_range_y)
-    plt.xlabel("z[0]")
-    plt.ylabel("z[1]")
-    plt.imshow(figure, cmap="Greys_r")
-    if filename:
-        plt.savefig(filename, bbox_inches='tight')
-    plt.show()
+    Parameters:
+    vae (VAE): The trained VAE model.
+    x_test (np.array): Test data.
+    y_test (np.array): Test labels.
+    latent_dim (int): The dimension of the latent space.
+    n (int): Number of points along each axis.
+    figsize (int): Size of the plot.
+    filename (str): File name to save the plot.
+    """
+    if latent_dim == 2:
+        # Display a 2D manifold of digits
+        digit_size = 28
+        scale = 1.0
+        figure = np.zeros((digit_size * n, digit_size * n))
+        grid_x = np.linspace(-scale, scale, n)
+        grid_y = np.linspace(-scale, scale, n)[::-1]
+
+        for i, yi in enumerate(grid_y):
+            for j, xi in enumerate(grid_x):
+                z_sample = np.array([[xi, yi]])
+                x_decoded = vae.decoder.predict(z_sample, verbose=0)
+                digit = x_decoded[0].reshape(digit_size, digit_size)
+                figure[
+                i * digit_size: (i + 1) * digit_size,
+                j * digit_size: (j + 1) * digit_size,
+                ] = digit
+
+        plt.figure(figsize=(figsize, figsize))
+        start_range = digit_size // 2
+        end_range = n * digit_size + start_range
+        pixel_range = np.arange(start_range, end_range, digit_size)
+        sample_range_x = np.round(grid_x, 1)
+        sample_range_y = np.round(grid_y, 1)
+        plt.xticks(pixel_range, sample_range_x)
+        plt.yticks(pixel_range, sample_range_y)
+        plt.xlabel("z[0]")
+        plt.ylabel("z[1]")
+        plt.imshow(figure, cmap="Greys_r")
+        if filename:
+            plt.savefig(filename, bbox_inches='tight')
+        plt.show()
+
+    elif latent_dim == 3:
+        encoded_imgs = vae.encoder.predict(x_test)[0]
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        sc = ax.scatter(encoded_imgs[:, 0], encoded_imgs[:, 1], encoded_imgs[:, 2], c=y_test, cmap='viridis')
+        plt.colorbar(sc)
+        ax.set_xlabel('Latent Dimension 1')
+        ax.set_ylabel('Latent Dimension 2')
+        ax.set_zlabel('Latent Dimension 3')
+        plt.title(f'Latent Space Representation (latent_dim={latent_dim})')
+        if filename:
+            plt.savefig(filename, bbox_inches='tight')
+        plt.show()
+
 
 def plot_reconstructions(model, x_test, title="Reconstructions", filename=None):
     decoded_imgs = model.predict(x_test)
@@ -76,6 +109,7 @@ def plot_reconstructions(model, x_test, title="Reconstructions", filename=None):
         plt.savefig(filename, bbox_inches='tight')
     plt.show()
 
+
 def plot_synthetic_data(synthetic_data, latent_points, title, filename=None):
     num_images = len(synthetic_data)
     n_cols = 5  # 5 valeurs différentes pour chaque dimension
@@ -86,9 +120,10 @@ def plot_synthetic_data(synthetic_data, latent_points, title, filename=None):
 
     for i in range(num_images):
         ax = axes[i]
-        ax.imshow(synthetic_data[i].reshape(28, 28), cmap='gray')
-        x, y = latent_points[i][:2]  # Utiliser les deux premières dimensions du point latent pour l'affichage
-        ax.set_title(f'({x:.2f}, {y:.2f})', fontsize=8)
+        image = synthetic_data[i].numpy()  # Convertir le tenseur en tableau NumPy
+        ax.imshow(image.reshape(28, 28), cmap='gray')
+        coords = ", ".join([f"{coord:.2f}" for coord in latent_points[i][:2]])  # Utiliser les deux premières dimensions du point latent pour l'affichage
+        ax.set_title(f'({coords})', fontsize=8)
         ax.axis('off')
 
     for ax in axes[num_images:]:
@@ -98,6 +133,7 @@ def plot_synthetic_data(synthetic_data, latent_points, title, filename=None):
     if filename:
         plt.savefig(filename, bbox_inches='tight')
     plt.show()
+
 
 def plot_multiple_histories(histories, latent_dims):
     styles = ['-', '--', '-.', ':']
