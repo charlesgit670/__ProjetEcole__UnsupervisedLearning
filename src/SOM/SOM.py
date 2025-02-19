@@ -6,7 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import tkinter as tk
 from tkinter import ttk
 
-from load_image import load_data_food
+# from load_image import load_data_food
 
 
 class SOM:
@@ -226,23 +226,23 @@ class SOM:
 
 if __name__ == "__main__":
     # Charger les données MNIST
-    # (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
-    # shapex = 28
-    # shapey = 28
-    # shapez = 1
+    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    shapex = 28
+    shapey = 28
+    shapez = 1
 
     # Charger les données food-101
-    X_train, X_test, y_train, y_test, label_to_classname = load_data_food()
-    shapex = 64
-    shapey = 64
-    shapez = 3
+    # X_train, X_test, y_train, y_test, label_to_classname = load_data_food()
+    # shapex = 64
+    # shapey = 64
+    # shapez = 3
 
     # Prétraiter les données: mise à plat et normalisation
     X_train = X_train.reshape((X_train.shape[0], -1)).astype(np.float32) / 255.0
     X_test = X_test.reshape((X_test.shape[0], -1)).astype(np.float32) / 255.0
 
     # Initialiser et entraîner la SOM
-    som = SOM(10, 10, learning_rate=0.1, gamma=0.1, shapex=shapex, shapey=shapey, shapez=shapez, n_iterations=10000)
+    som = SOM(10, 10, learning_rate=0.1, gamma=1.5, shapex=shapex, shapey=shapey, shapez=shapez, n_iterations=10000)
     som.train(X_train)
 
     # Affiche la représentation de la map (espace latent)

@@ -18,7 +18,7 @@ def run_single_experiment(dataset='mnist', latent_dim=30, activation='tanh', fin
 
     # Créer et entraîner l'AutoEncoder
     autoencoder = AutoEncoder(input_dim=input_dim, latent_dim=latent_dim, activation=activation, final_activation=final_activation)
-    history = autoencoder.train(x_train, x_test, epochs=120, batch_size=256, loss=loss, learning_rate=learning_rate)
+    history = autoencoder.train(x_train, x_test, epochs=10, batch_size=256, loss=loss, learning_rate=learning_rate)
 
     # Visualiser la perte d'entraînement
     loss_title = f'Training Loss (latent_dim={latent_dim}, activation={activation}, final_activation={final_activation}, loss={loss}, lr={learning_rate})'
@@ -71,11 +71,12 @@ def run_exploration(activations, losses, latent_dims, learning_rates, dataset='m
 
 if __name__ == "__main__":
     # Exécution d'une seule expérience
-    run_single_experiment(dataset='food', latent_dim=30, activation='tanh', final_activation='sigmoid', loss='binary_crossentropy', learning_rate=0.001)
-
+    # run_single_experiment(dataset='food', latent_dim=30, activation='tanh', final_activation='sigmoid', loss='binary_crossentropy', learning_rate=0.001)
+    run_single_experiment(dataset='mnist', latent_dim=2, activation='tanh', final_activation='sigmoid',
+                          loss='binary_crossentropy', learning_rate=0.001)
     # Exploration automatique de plusieurs configurations
-    activations = ['relu', 'tanh']
-    losses = ['binary_crossentropy', 'mse']
-    latent_dims = [3, 30]
-    learning_rates = [0.001, 0.0001]
+    # activations = ['relu', 'tanh']
+    # losses = ['binary_crossentropy', 'mse']
+    # latent_dims = [3, 30]
+    # learning_rates = [0.001, 0.0001]
     #run_exploration(activations, losses, latent_dims, learning_rates, dataset='food')
