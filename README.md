@@ -58,7 +58,3 @@ L'autoencoder permet de générer de nouvelles images simplement en prenant troi
 
 Nous affichons ci-dessus plusieurs nombres générés à partir de l'espace latent 3D, avec les valeurs correspondantes indiquées au-dessus de chaque image.  
 Chaque axe de l'espace latent influence l'image d'une manière différente, montrant comment l'autoencoder capture les variations des chiffres.
-
----
-
-Ce projet illustre ainsi comment les algorithmes d'apprentissage non supervisé permettent de structurer, compresser et générer des données de manière efficace.
