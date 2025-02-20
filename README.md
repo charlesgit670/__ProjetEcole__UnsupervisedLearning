@@ -58,3 +58,26 @@ L'autoencoder permet de générer de nouvelles images simplement en prenant troi
 
 Nous affichons ci-dessus plusieurs nombres générés à partir de l'espace latent 3D, avec les valeurs correspondantes indiquées au-dessus de chaque image.  
 Chaque axe de l'espace latent influence l'image d'une manière différente, montrant comment l'autoencoder capture les variations des chiffres.
+
+---
+
+### GAN
+
+Les résultats sont obtenus à partir d'un générateur et discriminateur composés uniquement de couche dense.
+Après 20 epochs d'entrainement :
+
+![MNIST_20epochs](images%2FGAN%2FMNIST_20epochs.png)
+
+Les résultats sont très corrects, mais certains nombres, comme 2, 4 et 6, n'apparaissent pas.
+Ceci est un problème connu des modèles simples de GAN. La fonction de perte (loss) du générateur dépend uniquement de la capacité du discriminateur à distinguer les nombres générés des vrais.
+Ainsi, le générateur peut apprendre à produire toujours le même nombre tout en minimisant sa perte, sans chercher à diversifier ses sorties.
+
+Evolution du loss :
+
+![MNIST_20epochsLoss](images%2FGAN%2FMNIST_20epochsLoss.png)
+
+On observe que la *loss* du discriminateur augmente (il se trompe de plus en plus), tandis que la *loss* du générateur diminue (il parvient de mieux en mieux à tromper le discriminateur).  
+
+La valeur théorique de la **binary cross-entropy** lorsque le discriminateur n'arrive plus à distinguer le vrai du faux, c'est-à-dire lorsqu'il est réduit au hasard, est **\( \ln 2 \approx 0.69 \)**.  
+
+Dans notre cas, la *loss* du discriminateur augmente jusqu'à environ **0.2**, ce qui signifie qu'il distingue de moins en moins bien les vrais nombres des faux. Idéalement, elle devrait tendre vers **0.69**, mais avec un modèle aussi simple, il semble peu probable d'y parvenir, même en prolongeant l'entraînement.
