@@ -78,6 +78,6 @@ Evolution du loss :
 
 On observe que la *loss* du discriminateur augmente (il se trompe de plus en plus), tandis que la *loss* du générateur diminue (il parvient de mieux en mieux à tromper le discriminateur).  
 
-La valeur théorique de la **binary cross-entropy** lorsque le discriminateur n'arrive plus à distinguer le vrai du faux, c'est-à-dire lorsqu'il est réduit au hasard, est **\( \ln 2 \approx 0.69 \)**.  
+La valeur théorique de la **binary cross-entropy** lorsque le discriminateur n'arrive plus à distinguer le vrai du faux, c'est-à-dire lorsqu'il est réduit au hasard, est $\ln 2 \approx 0.69$.
 
 Dans notre cas, la *loss* du discriminateur augmente jusqu'à environ **0.2**, ce qui signifie qu'il distingue de moins en moins bien les vrais nombres des faux. Idéalement, elle devrait tendre vers **0.69**, mais avec un modèle aussi simple, il semble peu probable d'y parvenir, même en prolongeant l'entraînement.
